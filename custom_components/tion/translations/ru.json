@@ -1,0 +1,120 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tion MagicAir",
+        "description": "Войдите под аккаунтом MagicAir (tion.ru).",
+        "data": {
+          "username": "Эл. почта",
+          "password": "Пароль",
+          "scan_interval": "Интервал опроса (секунды)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Неверная почта или пароль",
+      "cannot_connect": "Нет связи с облаком Tion",
+      "unknown": "Непредвиденная ошибка"
+    },
+    "abort": {
+      "already_configured": "Этот аккаунт уже настроен",
+      "cannot_connect": "Нет связи с облаком Tion"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "co2": { "name": "CO₂" },
+      "t_in": { "name": "Температура на входе" },
+      "t_out": { "name": "Температура на выходе" },
+      "speed": { "name": "Скорость" },
+      "filter_days_left": { "name": "Ресурс фильтра" },
+      "signal_level": { "name": "Уровень сигнала" },
+      "firmware": { "name": "Прошивка" },
+      "mac": { "name": "MAC-адрес" },
+      "run_hours": { "name": "Наработка" },
+      "heater_power": { "name": "Мощность нагревателя" },
+      "t_main_board": { "name": "Температура платы" },
+      "t_power_board": { "name": "Температура силовой платы" },
+      "turbo_elapsed": { "name": "Турбо: прошло" },
+      "current_preset": { "name": "Текущий пресет" }
+    },
+    "binary_sensor": {
+      "online": { "name": "На связи" },
+      "filter_need_replace": { "name": "Нужна замена фильтра" },
+      "turbo": { "name": "Турбо-режим" },
+      "schedule_running": { "name": "Расписание синхронизировано" }
+    },
+    "switch": {
+      "power": { "name": "Питание" },
+      "heater": { "name": "Нагреватель" },
+      "backlight": { "name": "Подсветка" },
+      "sound": { "name": "Звук" },
+      "auto_mode": { "name": "Авторежим" },
+      "schedule": { "name": "Расписание" }
+    },
+    "button": {
+      "apply_schedule": { "name": "Применить расписание" }
+    },
+    "number": {
+      "fan_speed": { "name": "Скорость" },
+      "target_co2": { "name": "Целевой CO₂" },
+      "speed_min_set": { "name": "Мин. скорость" },
+      "speed_max_set": { "name": "Макс. скорость" }
+    },
+    "select": {
+      "air_source": {
+        "name": "Забор воздуха",
+        "state": {
+          "inside": "Из комнаты",
+          "combined": "Смешанный",
+          "outside": "С улицы",
+          "recirculation": "Рециркуляция"
+        }
+      }
+    }
+  },
+  "services": {
+    "get_presets": {
+      "name": "Получить пресеты",
+      "description": "Вернуть пресеты расписания для зоны устройства.",
+      "fields": { "device_id": { "name": "Устройство", "description": "Любое устройство Tion из нужной зоны." } }
+    },
+    "set_preset": {
+      "name": "Создать/изменить пресет",
+      "description": "Создать пресет (без guid) или изменить (с guid) в зоне устройства.",
+      "fields": {
+        "device_id": { "name": "Устройство", "description": "Любое устройство Tion из нужной зоны." },
+        "preset": { "name": "Пресет", "description": "Объект пресета: name, icon, climate_settings, devices (и guid для изменения)." }
+      }
+    },
+    "delete_preset": {
+      "name": "Удалить пресет",
+      "description": "Удалить пресет по guid.",
+      "fields": {
+        "device_id": { "name": "Устройство", "description": "Любое устройство Tion из нужной зоны." },
+        "guid": { "name": "GUID пресета", "description": "GUID удаляемого пресета." }
+      }
+    },
+    "get_schedule": {
+      "name": "Получить расписание",
+      "description": "Вернуть расписание (дни и тайминги) для зоны устройства.",
+      "fields": { "device_id": { "name": "Устройство", "description": "Любое устройство Tion из нужной зоны." } }
+    },
+    "set_schedule": {
+      "name": "Создать/изменить расписание",
+      "description": "Создать или переприменить расписание (переприменение включает его).",
+      "fields": {
+        "device_id": { "name": "Устройство", "description": "Любое устройство Tion из нужной зоны." },
+        "schedule": { "name": "Расписание", "description": "Объект: active_days, timings (и guid для изменения)." }
+      }
+    },
+    "delete_schedule": {
+      "name": "Удалить расписание",
+      "description": "Удалить расписание по guid.",
+      "fields": {
+        "device_id": { "name": "Устройство", "description": "Любое устройство Tion из нужной зоны." },
+        "guid": { "name": "GUID расписания", "description": "GUID удаляемого расписания." }
+      }
+    }
+  }
+}

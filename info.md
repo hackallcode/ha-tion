@@ -1,2 +1,5 @@
 # Tion Home Assistant
-This component provides integration of Tion devices (breezers and climate sensors) into Home Assistant smart home system. Based on the [tion](https://github.com/airens/tion) package. Full documentation is here: <https://github.com/RealLord/tion_home_assistant>
+
+Интеграция бризеров Tion и станции MagicAir в Home Assistant через облако Tion. Управление скоростью/нагревом/забором воздуха/подсветкой/звуком, датчики (CO₂, температура, влажность, PM, ресурс фильтра и др.), расписания и пресеты по комнатам. Настройка через UI.
+
+Полная документация: <https://github.com/hackallcode/ha-tion>

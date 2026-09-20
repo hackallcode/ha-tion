@@ -1,0 +1,120 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tion MagicAir",
+        "description": "Sign in with your MagicAir (tion.ru) account.",
+        "data": {
+          "username": "Email",
+          "password": "Password",
+          "scan_interval": "Polling interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid email or password",
+      "cannot_connect": "Cannot reach the Tion cloud",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This account is already configured",
+      "cannot_connect": "Cannot reach the Tion cloud"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "co2": { "name": "CO2" },
+      "t_in": { "name": "Intake temperature" },
+      "t_out": { "name": "Output temperature" },
+      "speed": { "name": "Speed" },
+      "filter_days_left": { "name": "Filter days left" },
+      "signal_level": { "name": "Signal level" },
+      "firmware": { "name": "Firmware" },
+      "mac": { "name": "MAC address" },
+      "run_hours": { "name": "Run time" },
+      "heater_power": { "name": "Heater power" },
+      "t_main_board": { "name": "Main board temperature" },
+      "t_power_board": { "name": "Power board temperature" },
+      "turbo_elapsed": { "name": "Turbo elapsed" },
+      "current_preset": { "name": "Current preset" }
+    },
+    "binary_sensor": {
+      "online": { "name": "Online" },
+      "filter_need_replace": { "name": "Filter needs replacing" },
+      "turbo": { "name": "Turbo mode" },
+      "schedule_running": { "name": "Schedule synced" }
+    },
+    "switch": {
+      "power": { "name": "Power" },
+      "heater": { "name": "Heater" },
+      "backlight": { "name": "Backlight" },
+      "sound": { "name": "Sound" },
+      "auto_mode": { "name": "Auto mode" },
+      "schedule": { "name": "Schedule" }
+    },
+    "button": {
+      "apply_schedule": { "name": "Apply schedule" }
+    },
+    "number": {
+      "fan_speed": { "name": "Fan speed" },
+      "target_co2": { "name": "Target CO2" },
+      "speed_min_set": { "name": "Minimum speed" },
+      "speed_max_set": { "name": "Maximum speed" }
+    },
+    "select": {
+      "air_source": {
+        "name": "Air source",
+        "state": {
+          "inside": "Inside",
+          "combined": "Mixed",
+          "outside": "Outside air",
+          "recirculation": "Recirculation"
+        }
+      }
+    }
+  },
+  "services": {
+    "get_presets": {
+      "name": "Get presets",
+      "description": "Return the schedule presets configured for the device's zone.",
+      "fields": { "device_id": { "name": "Device", "description": "Any Tion device in the target zone." } }
+    },
+    "set_preset": {
+      "name": "Create/edit preset",
+      "description": "Create a preset (no guid) or edit one (with guid) in the device's zone.",
+      "fields": {
+        "device_id": { "name": "Device", "description": "Any Tion device in the target zone." },
+        "preset": { "name": "Preset", "description": "Preset object: name, icon, climate_settings, devices (and guid to edit)." }
+      }
+    },
+    "delete_preset": {
+      "name": "Delete preset",
+      "description": "Delete a preset by its guid.",
+      "fields": {
+        "device_id": { "name": "Device", "description": "Any Tion device in the target zone." },
+        "guid": { "name": "Preset GUID", "description": "GUID of the preset to delete." }
+      }
+    },
+    "get_schedule": {
+      "name": "Get schedule",
+      "description": "Return the schedule (days and timings) for the device's zone.",
+      "fields": { "device_id": { "name": "Device", "description": "Any Tion device in the target zone." } }
+    },
+    "set_schedule": {
+      "name": "Create/edit schedule",
+      "description": "Create or re-apply a schedule (re-applying enables it).",
+      "fields": {
+        "device_id": { "name": "Device", "description": "Any Tion device in the target zone." },
+        "schedule": { "name": "Schedule", "description": "Schedule object: active_days, timings (and guid to edit)." }
+      }
+    },
+    "delete_schedule": {
+      "name": "Delete schedule",
+      "description": "Delete a schedule by its guid.",
+      "fields": {
+        "device_id": { "name": "Device", "description": "Any Tion device in the target zone." },
+        "guid": { "name": "Schedule GUID", "description": "GUID of the schedule to delete." }
+      }
+    }
+  }
+}

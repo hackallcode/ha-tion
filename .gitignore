@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+
+# Never commit raw traffic captures or APKs
+*.flows
+*.apk

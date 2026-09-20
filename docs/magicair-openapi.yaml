@@ -1,0 +1,1499 @@
+openapi: 3.0.3
+info:
+  title: Tion MagicAir mobile API (reverse engineered)
+  version: 1.19.8-capture-2026-09-20
+  description: Unofficial specification derived from MagicAir Android 1.19.8 traffic and APK Retrofit interfaces.
+    Operations marked x-evidence=observed were captured live; apk-static operations were only declared in the APK
+    and may be unavailable or unsafe.
+servers:
+- url: https://api.magicair.tion.ru
+  description: Observed mobile backend
+security:
+- bearerAuth: []
+tags:
+- name: Auth
+- name: Account
+- name: Location
+- name: Zone
+- name: Schedule control
+- name: Presets
+- name: Schedules
+- name: Device
+- name: Tasks
+- name: Events
+- name: System
+paths:
+  /idsrv/oauth2/token:
+    post:
+      tags:
+      - Auth
+      summary: Password grant login
+      operationId: login
+      x-evidence: apk-static
+      x-ui-action: Вход в аккаунт
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordGrant'
+      responses:
+        '200':
+          description: OAuth token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthToken'
+  /idsrv/connect/token:
+    post:
+      tags:
+      - Auth
+      summary: Refresh access token
+      operationId: refreshToken
+      x-evidence: apk-static
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RefreshGrant'
+      responses:
+        '200':
+          description: OAuth token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthToken'
+  /account/info:
+    get:
+      tags:
+      - Account
+      summary: Get account info
+      operationId: GetAccountInfo
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreeForm'
+      x-ui-action: Загрузка профиля
+    put:
+      tags:
+      - Account
+      summary: Update account info
+      operationId: UpdateAccountInfo
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreeForm'
+      x-ui-action: Изменение профиля/уведомлений
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+  /account/countries:
+    get:
+      tags:
+      - Account
+      summary: List countries
+      operationId: ListCountries
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreeForm'
+      security: []
+  /account/accept_documents:
+    post:
+      tags:
+      - Account
+      summary: Accept documents
+      operationId: AcceptDocuments
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success, empty body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+  /account/change_password:
+    post:
+      tags:
+      - Account
+      summary: Change password
+      operationId: ChangePassword
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success, empty body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+  /account/forgot:
+    post:
+      tags:
+      - Account
+      summary: Request password reset
+      operationId: RequestPasswordReset
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success, empty body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+      security: []
+  /account/move:
+    post:
+      tags:
+      - Account
+      summary: Move account
+      operationId: MoveAccount
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success, empty body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+  /account/delete:
+    post:
+      tags:
+      - Account
+      summary: Delete account
+      operationId: DeleteAccount
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success, empty body
+      description: Destructive. Never invoke during discovery.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+  /account/request_confirmation:
+    post:
+      tags:
+      - Account
+      summary: Request email confirmation
+      operationId: RequestEmailConfirmation
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success, empty body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+      security: []
+  /account/register:
+    post:
+      tags:
+      - Account
+      summary: Register account
+      operationId: RegisterAccount
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success, empty body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+      security: []
+  /account/upload_photo:
+    post:
+      tags:
+      - Account
+      summary: Upload profile photo
+      operationId: UploadProfilePhoto
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success, empty body
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                avatar:
+                  type: string
+                  format: binary
+  /location:
+    get:
+      tags:
+      - Location
+      summary: List locations with zones and devices
+      operationId: ListLocationsWithZonesAndDevices
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Locations'
+      x-ui-action: Главный экран и периодическое обновление
+    post:
+      tags:
+      - Location
+      summary: Create location
+      operationId: CreateLocation
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreeForm'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+  /location/{locationGuid}:
+    get:
+      tags:
+      - Location
+      summary: Get location
+      operationId: GetLocation
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+      parameters:
+      - &id001
+        name: locationGuid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      tags:
+      - Location
+      summary: Update location
+      operationId: UpdateLocation
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success, empty body
+      parameters:
+      - *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+    delete:
+      tags:
+      - Location
+      summary: Delete location
+      operationId: DeleteLocation
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success, empty body
+      description: Destructive; static declaration only.
+      parameters:
+      - *id001
+  /location/{locationGuid}/zone:
+    post:
+      tags:
+      - Location
+      summary: Create zone
+      operationId: CreateZone
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+      parameters:
+      - *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+  /location/{locationGuid}/users:
+    get:
+      tags:
+      - Location
+      summary: List location access entries
+      operationId: ListLocationAccessEntries
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FreeForm'
+      parameters:
+      - *id001
+  /location/{locationGuid}/replace:
+    post:
+      tags:
+      - Location
+      summary: Replace base station
+      operationId: ReplaceBaseStation
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreeForm'
+      parameters:
+      - *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+  /location/{locationGuid}/replaceData:
+    get:
+      tags:
+      - Location
+      summary: Get base-station replacement data
+      operationId: GetBaseStationReplacementData
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreeForm'
+      parameters:
+      - *id001
+  /location/{locationGuid}/mac/{mac}:
+    post:
+      tags:
+      - Location
+      summary: Set base-station MAC
+      operationId: SetBaseStationMac
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success, empty body
+      parameters:
+      - *id001
+      - name: mac
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+  /location/{locationGuid}/deviceOrder:
+    post:
+      tags:
+      - Location
+      summary: Update device order
+      operationId: UpdateDeviceOrder
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success, empty body
+      x-ui-action: Перенос/сортировка устройств
+      parameters:
+      - *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceOrder'
+  /location/{locationGuid}/order:
+    post:
+      tags:
+      - Location
+      summary: Update zone order
+      operationId: UpdateZoneOrder
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success, empty body
+      parameters:
+      - *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+  /zone/{zoneGuid}:
+    put:
+      tags:
+      - Zone
+      summary: Update zone
+      operationId: UpdateZone
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+      parameters:
+      - &id002
+        name: zoneGuid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+    delete:
+      tags:
+      - Zone
+      summary: Delete zone
+      operationId: DeleteZone
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+      description: Destructive; static declaration only.
+      parameters:
+      - *id002
+  /zone/{zoneGuid}/data/{period}:
+    get:
+      tags:
+      - Zone
+      summary: Get zone history by period
+      operationId: GetZoneHistoryByPeriod
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FreeForm'
+      x-ui-action: Графики за 12 часов / 3 дня
+      parameters:
+      - *id002
+      - name: period
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - 12hours
+          - 3days
+  /zone/{zoneGuid}/data/{start}/{stop}:
+    get:
+      tags:
+      - Zone
+      summary: Get zone history by range
+      operationId: GetZoneHistoryByRange
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FreeForm'
+      parameters:
+      - *id002
+      - name: start
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: stop
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+  /zone/{zoneGuid}/mode:
+    post:
+      tags:
+      - Zone
+      summary: Set zone mode and targets
+      operationId: SetZoneModeAndTargets
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+      x-ui-action: Авто/ручной режим и целевой CO₂
+      parameters:
+      - *id002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ZoneModeRequest'
+            example:
+              mode: auto
+              co2: 1200
+              temperature: 0
+              humidity: 0
+              noise: 0
+              pm25: 0
+              pm10: 0
+  /zone/{zoneGuid}/schedule:
+    post:
+      tags:
+      - Schedule control
+      summary: Enable or disable schedule
+      operationId: EnableOrDisableSchedule
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+      x-ui-action: Галочка «работа по расписанию»
+      description: 'Mobile-only signature missing from the web client. Task type: toggleCalendar.'
+      parameters:
+      - *id002
+      - name: 'on'
+        in: query
+        required: true
+        schema:
+          type: boolean
+        description: true enables, false disables
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyObject'
+            example: {}
+  /zone/{zoneGuid}/schedule/preset:
+    post:
+      tags:
+      - Schedule control
+      summary: Restore current schedule preset
+      operationId: RestoreCurrentSchedulePreset
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+      x-ui-action: «Восстановить/применить настройки расписания»
+      description: 'Observed without query string. APK declaration contains optional presetId, but the live app
+        omitted it. Task type: activatePreset.'
+      parameters:
+      - *id002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyObject'
+            example: {}
+  /preset/{zoneGuid}:
+    get:
+      tags:
+      - Presets
+      summary: List presets
+      operationId: ListPresets
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Preset'
+      x-ui-action: Открытие пресетов/расписания
+      parameters:
+      - *id002
+    post:
+      tags:
+      - Presets
+      summary: Create preset
+      operationId: CreatePreset
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success, empty body
+      x-ui-action: Создание пресета
+      parameters:
+      - *id002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Preset'
+    put:
+      tags:
+      - Presets
+      summary: Update preset
+      operationId: UpdatePreset
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success, empty body
+      x-ui-action: Редактирование пресета
+      parameters:
+      - *id002
+      - name: presetId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Preset'
+    delete:
+      tags:
+      - Presets
+      summary: Delete preset
+      operationId: DeletePreset
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success, empty body
+      x-ui-action: Удаление пресета
+      description: Destructive. Observed only in Test zone.
+      parameters:
+      - *id002
+      - name: presetId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /schedule/{zoneGuid}:
+    get:
+      tags:
+      - Schedules
+      summary: List schedules
+      operationId: ListSchedules
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Schedule'
+      x-ui-action: Открытие расписания
+      parameters:
+      - *id002
+    post:
+      tags:
+      - Schedules
+      summary: Create schedule
+      operationId: CreateSchedule
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success, empty body
+      x-ui-action: Создание расписания
+      parameters:
+      - *id002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Schedule'
+    put:
+      tags:
+      - Schedules
+      summary: Update schedule
+      operationId: UpdateSchedule
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success, empty body
+      x-ui-action: Дни и времена расписания
+      parameters:
+      - *id002
+      - name: scheduleId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Schedule'
+    delete:
+      tags:
+      - Schedules
+      summary: Delete schedule
+      operationId: DeleteSchedule
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success, empty body
+      x-ui-action: Удаление расписания
+      description: Destructive. Observed only in Test zone; app recreated it afterwards.
+      parameters:
+      - *id002
+      - name: scheduleId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /device/{deviceGuid}:
+    get:
+      tags:
+      - Device
+      summary: Get full device info
+      operationId: GetFullDeviceInfo
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreeForm'
+      parameters:
+      - &id003
+        name: deviceGuid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      tags:
+      - Device
+      summary: Rename device
+      operationId: RenameDevice
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success, empty body
+      parameters:
+      - *id003
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+    delete:
+      tags:
+      - Device
+      summary: Delete device
+      operationId: DeleteDevice
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+      description: Destructive; static declaration only.
+      parameters:
+      - *id003
+  /device/{deviceGuid}/updates:
+    get:
+      tags:
+      - Device
+      summary: Get device update info
+      operationId: GetDeviceUpdateInfo
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreeForm'
+      parameters:
+      - *id003
+  /device/{deviceGuid}/mode:
+    post:
+      tags:
+      - Device
+      summary: Set device operating state
+      operationId: SetDeviceOperatingState
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+      x-ui-action: Питание, скорость, нагреватель, заслонка, температура
+      parameters:
+      - *id003
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceModeRequest'
+  /device/{deviceGuid}/settings:
+    post:
+      tags:
+      - Device
+      summary: Set device auxiliary settings
+      operationId: SetDeviceAuxiliarySettings
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+      x-ui-action: Подсветка/звук/турбо/сброс фильтра
+      parameters:
+      - *id003
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceSettingsRequest'
+  /device/{deviceGuid}/extension:
+    post:
+      tags:
+      - Device
+      summary: Add extension
+      operationId: AddExtension
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreeForm'
+      parameters:
+      - *id003
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+  /device/{deviceGuid}/pair:
+    put:
+      tags:
+      - Device
+      summary: Set pairing state
+      operationId: SetPairingState
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+      parameters:
+      - *id003
+      - name: 'on'
+        in: query
+        required: true
+        schema:
+          type: boolean
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyObject'
+            example: {}
+  /device/{deviceGuid}/record:
+    post:
+      tags:
+      - Device
+      summary: Record device preset
+      operationId: RecordDevicePreset
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+      parameters:
+      - *id003
+      - name: extId
+        in: query
+        required: false
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+  /device/{deviceGuid}/zone/{zoneGuid}:
+    post:
+      tags:
+      - Device
+      summary: Move device to zone
+      operationId: MoveDeviceToZone
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+      x-ui-action: Назначение устройства комнате
+      parameters:
+      - *id003
+      - *id002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyObject'
+            example: {}
+  /device/byod:
+    get:
+      tags:
+      - Device
+      summary: List BYOD devices
+      operationId: ListByodDevices
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FreeForm'
+  /device/byod/{deviceGuid}:
+    delete:
+      tags:
+      - Device
+      summary: Delete BYOD device
+      operationId: DeleteByodDevice
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success, empty body
+      description: Destructive; static declaration only.
+      parameters:
+      - *id003
+  /device/byod/{deviceGuid}/deletePreset:
+    post:
+      tags:
+      - Device
+      summary: Delete BYOD presets
+      operationId: DeleteByodPresets
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success, empty body
+      description: Destructive; static declaration only.
+      parameters:
+      - *id003
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreeForm'
+  /task/{taskId}:
+    get:
+      tags:
+      - Tasks
+      summary: Get asynchronous task
+      operationId: GetAsynchronousTask
+      x-evidence: observed
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+      x-ui-action: Автоматический поллинг после команд
+      parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /task:
+    get:
+      tags:
+      - Tasks
+      summary: List tasks
+      operationId: ListTasks
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+  /event/{locationGuid}/top/{count}:
+    get:
+      tags:
+      - Events
+      summary: Get latest events
+      operationId: GetLatestEvents
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FreeForm'
+      parameters:
+      - *id001
+      - name: count
+        in: path
+        required: true
+        schema:
+          type: integer
+  /event/{locationGuid}/older/{date}/{count}:
+    get:
+      tags:
+      - Events
+      summary: Get older events
+      operationId: GetOlderEvents
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FreeForm'
+      parameters:
+      - *id001
+      - name: date
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: count
+        in: path
+        required: true
+        schema:
+          type: integer
+  /system/tcp:
+    get:
+      tags:
+      - System
+      summary: Get TCP endpoint
+      operationId: GetTcpEndpoint
+      x-evidence: apk-static
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreeForm'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Authorization: <token_type> <access_token>; observed token_type is Bearer.'
+  schemas:
+    FreeForm:
+      type: object
+      additionalProperties: true
+    EmptyObject:
+      type: object
+      additionalProperties: false
+    PasswordGrant:
+      type: object
+      required:
+      - grant_type
+      - username
+      - password
+      - client_id
+      - client_secret
+      properties:
+        grant_type:
+          type: string
+          enum:
+          - password
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+        client_id:
+          type: string
+          format: uuid
+        client_secret:
+          type: string
+          format: password
+    RefreshGrant:
+      type: object
+      required:
+      - grant_type
+      - refresh_token
+      - client_id
+      - client_secret
+      properties:
+        grant_type:
+          type: string
+          enum:
+          - refresh_token
+        refresh_token:
+          type: string
+        client_id:
+          type: string
+          format: uuid
+        client_secret:
+          type: string
+          format: password
+    OAuthToken:
+      type: object
+      properties:
+        token_type:
+          type: string
+          example: Bearer
+        access_token:
+          type: string
+          example: <redacted>
+        refresh_token:
+          type: string
+          example: <redacted>
+        expires_in:
+          type: integer
+    Task:
+      type: object
+      required:
+      - task_id
+      - status
+      - type
+      - target_guid
+      properties:
+        task_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - queued
+          - delivered
+          - completed
+          - failed
+        type:
+          type: string
+          example: toggleCalendar
+        target_guid:
+          type: string
+          format: uuid
+        user_guid:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+          example: <redacted>
+    ZoneModeRequest:
+      type: object
+      required:
+      - mode
+      - co2
+      properties:
+        mode:
+          type: string
+          enum:
+          - auto
+          - manual
+        co2:
+          type: number
+        temperature:
+          type: number
+        humidity:
+          type: number
+        noise:
+          type: number
+        pm25:
+          type: number
+        pm10:
+          type: number
+    DeviceModeRequest:
+      type: object
+      properties:
+        is_on:
+          type: boolean
+        heater_enabled:
+          type: boolean
+        gate:
+          type: integer
+        heater_mode:
+          type: string
+          enum:
+          - maintenance
+          - heat
+        speed:
+          type: number
+        speed_max_set:
+          type: number
+        speed_min_set:
+          type: number
+        sound:
+          type: integer
+        t_set:
+          type: number
+    DeviceSettingsRequest:
+      type: object
+      description: Union payload; observed {backlight:0}. APK also declares sound, turbo and filter-reset variants.
+      additionalProperties: true
+      properties:
+        backlight:
+          type: integer
+        sound:
+          type: integer
+    Preset:
+      type: object
+      properties:
+        guid:
+          type: string
+          format: uuid
+        name:
+          type: string
+        icon:
+          type: integer
+        incomplete_device_list:
+          type: boolean
+          nullable: true
+        climate_settings:
+          $ref: '#/components/schemas/ZoneModeRequest'
+        devices:
+          type: array
+          items:
+            $ref: '#/components/schemas/FreeForm'
+        notUpdating:
+          type: boolean
+    ScheduleTiming:
+      type: object
+      required:
+      - preset_id
+      - starts_at
+      properties:
+        preset_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        icon:
+          type: integer
+        starts_at:
+          type: integer
+          minimum: 0
+          maximum: 86399
+          description: Seconds from local midnight
+    Schedule:
+      type: object
+      required:
+      - active_days
+      - timings
+      properties:
+        guid:
+          type: string
+          format: uuid
+        active_days:
+          type: array
+          items:
+            type: string
+            enum:
+            - mon
+            - tue
+            - wed
+            - thu
+            - fri
+            - sat
+            - sun
+        timings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleTiming'
+        creationTimeIso:
+          oneOf:
+          - type: integer
+          - type: string
+        updateTimeIso:
+          oneOf:
+          - type: integer
+          - type: string
+    ScheduleState:
+      type: object
+      properties:
+        is_schedule_sync:
+          type: boolean
+        is_active:
+          type: boolean
+        is_mode_sync:
+          type: boolean
+        current_preset:
+          $ref: '#/components/schemas/FreeForm'
+        next_preset_starts_at:
+          type: integer
+        next_starts_iso:
+          type: string
+    Zone:
+      type: object
+      required:
+      - guid
+      - name
+      properties:
+        guid:
+          type: string
+          format: uuid
+        name:
+          type: string
+        mode:
+          $ref: '#/components/schemas/FreeForm'
+        schedule:
+          $ref: '#/components/schemas/ScheduleState'
+        devices:
+          type: array
+          items:
+            $ref: '#/components/schemas/FreeForm'
+        sensors_average:
+          type: array
+          items:
+            $ref: '#/components/schemas/FreeForm'
+    Location:
+      type: object
+      required:
+      - guid
+      - name
+      - zones
+      properties:
+        guid:
+          type: string
+          format: uuid
+        name:
+          type: string
+        timezone:
+          type: integer
+        connection:
+          $ref: '#/components/schemas/FreeForm'
+        zones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Zone'
+    Locations:
+      type: array
+      items:
+        $ref: '#/components/schemas/Location'
+    DeviceOrder:
+      type: object
+      additionalProperties:
+        type: object
+        additionalProperties:
+          type: integer
+      description: zoneGuid -> deviceGuid -> zero-based order

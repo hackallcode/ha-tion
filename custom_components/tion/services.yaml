@@ -1,0 +1,65 @@
+get_presets:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: tion
+
+set_preset:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: tion
+    preset:
+      required: true
+      example: '{"name": "Day", "icon": 1, "climate_settings": {"mode": "auto", "co2": 800}, "devices": [{"id": "<breezer-guid>", "speed": 3, "speed_min_set": 1, "speed_max_set": 6, "t_set": 20, "is_on": true, "gate": 0, "heater_mode": "heat"}]}'
+      selector:
+        object:
+
+delete_preset:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: tion
+    guid:
+      required: true
+      selector:
+        text:
+
+get_schedule:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: tion
+
+set_schedule:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: tion
+    schedule:
+      required: true
+      example: '{"guid": "<schedule-guid>", "active_days": ["mon","tue","wed","thu","fri","sat","sun"], "timings": [{"preset_id": "<preset-guid>", "starts_at": 25200}]}'
+      selector:
+        object:
+
+delete_schedule:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: tion
+    guid:
+      required: true
+      selector:
+        text:
