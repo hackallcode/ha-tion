@@ -4,3 +4,6 @@ __pycache__/
 # Never commit raw traffic captures or APKs
 *.flows
 *.apk
+
+# MagicAir traffic-capture workspace (live token, APK, decompiled sources)
+magicair_capture/
