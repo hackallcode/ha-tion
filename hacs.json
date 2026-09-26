@@ -1,7 +1,5 @@
-  
- {
+{
   "name": "Tion",
   "country": "RU",
-  "render_readme": true,
-  "domains": ["climate", "sensor"]
- }
+  "homeassistant": "2024.11.0"
+}

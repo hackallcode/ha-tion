@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Полный рефакторинг архитектуры
   - Клиент облачного API вынесен внутрь компонента (async/aiohttp), зависимость от заброшенного пакета `tion` убрана.
   - Единый `DataUpdateCoordinator` вместо N запросов на скан.
+  - Минимальная версия Home Assistant - 2024.11 (координатор принимает `config_entry`).
   - Настройка через UI (Config Flow) с авто-импортом из configuration.yaml.
   - Сущности сгруппированы в устройства (MagicAir, Breezer) через `device_info`.
   - Оптимистичный UI: команды сразу отражаются в интерфейсе, сверка с облаком — отложенным опросом (облако eventually-consistent).

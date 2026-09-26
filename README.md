@@ -16,6 +16,8 @@
 
 ## Установка
 
+Минимальная версия Home Assistant - 2024.11.
+
 ### HACS
 1. HACS -> ⋮ -> Custom repositories.
 2. Добавьте `hackallcode/ha-tion`, категория `Integration`, сохраните.
