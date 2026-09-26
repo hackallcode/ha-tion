@@ -108,6 +108,7 @@ class TionClimate(TionEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs) -> None:
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
+            self.coordinator.optimistic_device(self._guid, t_set=int(temp))
             await self.coordinator.async_send(
                 self.coordinator.client.set_breezer(self._device, t_set=int(temp))
             )
@@ -115,14 +116,17 @@ class TionClimate(TionEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         device = self._device
         if fan_mode == FAN_AUTO:
+            self.coordinator.optimistic_zone_mode(device.zone.guid, "auto")
             await self.coordinator.async_send(
                 self.coordinator.client.set_zone_mode(device.zone, mode="auto")
             )
             return
         if device.zone.mode == "auto":
+            self.coordinator.optimistic_zone_mode(device.zone.guid, "manual")
             await self.coordinator.async_send(
                 self.coordinator.client.set_zone_mode(device.zone, mode="manual")
             )
+        self.coordinator.optimistic_device(self._guid, speed=int(fan_mode), is_on=True)
         await self.coordinator.async_send(
             self.coordinator.client.set_breezer(self._device, speed=int(fan_mode), is_on=True)
         )
@@ -131,14 +135,20 @@ class TionClimate(TionEntity, ClimateEntity):
         device = self._device
         if hvac_mode == HVACMode.OFF:
             if device.zone.mode == "auto":
+                self.coordinator.optimistic_zone_mode(device.zone.guid, "manual")
                 await self.coordinator.async_send(
                     self.coordinator.client.set_zone_mode(device.zone, mode="manual")
                 )
+            self.coordinator.optimistic_device(self._guid, is_on=False, speed=0)
             await self.coordinator.async_send(
                 self.coordinator.client.set_breezer(self._device, speed=0, is_on=False)
             )
             return
         speed = int(self._d.get("speed") or 0) or 1
+        self.coordinator.optimistic_device(
+            self._guid, is_on=True, speed=speed,
+            heater_mode="heat" if hvac_mode == HVACMode.HEAT else "maintenance",
+        )
         await self.coordinator.async_send(
             self.coordinator.client.set_breezer(
                 self._device,

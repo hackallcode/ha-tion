@@ -32,9 +32,11 @@ class TionSwitchDescription(SwitchEntityDescription):
 async def _set_power(coord: TionCoordinator, device: TionDevice, on: bool) -> None:
     # In auto the station drives the breezer; take manual control to power on/off.
     if device.zone.mode != MODE_MANUAL:
+        coord.optimistic_zone_mode(device.zone.guid, MODE_MANUAL)
         await coord.async_send(
             coord.client.set_zone_mode(device.zone, mode=MODE_MANUAL)
         )
+    coord.optimistic_device(device.guid, is_on=on, speed=1 if on else 0)
     await coord.async_send(
         coord.client.set_breezer(device, speed=1 if on else 0, is_on=on)
     )
@@ -43,28 +45,34 @@ async def _set_power(coord: TionCoordinator, device: TionDevice, on: bool) -> No
 async def _set_heater(coord: TionCoordinator, device: TionDevice, on: bool) -> None:
     # Turning heat on implies the breezer runs; turning it off just disables the heater.
     if on:
+        coord.optimistic_device(device.guid, heater_mode="heat", is_on=True)
         await coord.async_send(
             coord.client.set_breezer(device, heater_enabled=True, is_on=True)
         )
     else:
+        coord.optimistic_device(device.guid, heater_mode="maintenance")
         await coord.async_send(coord.client.set_breezer(device, heater_enabled=False))
 
 
 async def _set_backlight(coord: TionCoordinator, device: TionDevice, on: bool) -> None:
+    coord.optimistic_device(device.guid, backlight=1 if on else 0)
     await coord.async_send(coord.client.set_device_backlight(device, 1 if on else 0))
 
 
 async def _set_sound(coord: TionCoordinator, device: TionDevice, on: bool) -> None:
+    coord.optimistic_device(device.guid, sound_is_on=on)
     await coord.async_send(coord.client.set_sound(device, on))
 
 
 async def _set_auto(coord: TionCoordinator, device: TionDevice, on: bool) -> None:
+    coord.optimistic_zone_mode(device.zone.guid, MODE_AUTO if on else MODE_MANUAL)
     await coord.async_send(
         coord.client.set_zone_mode(device.zone, mode=MODE_AUTO if on else MODE_MANUAL)
     )
 
 
 async def _set_schedule(coord: TionCoordinator, device: TionDevice, on: bool) -> None:
+    coord.optimistic_zone_schedule(device.zone.guid, is_active=on)
     await coord.async_send(coord.client.set_schedule_active(device.zone.guid, on))
 
 

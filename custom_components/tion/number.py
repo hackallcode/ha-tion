@@ -31,23 +31,28 @@ class TionNumberDescription(NumberEntityDescription):
 
 
 async def _set_target_co2(coord: TionCoordinator, device: TionDevice, value: float) -> None:
+    coord.optimistic_zone_co2(device.zone.guid, int(value))
     await coord.async_send(coord.client.set_zone_mode(device.zone, target_co2=value))
 
 
 async def _set_fan_speed(coord: TionCoordinator, device: TionDevice, value: float) -> None:
     # A manual speed implies manual mode + the breezer running.
     if device.zone.mode != MODE_MANUAL:
+        coord.optimistic_zone_mode(device.zone.guid, MODE_MANUAL)
         await coord.async_send(coord.client.set_zone_mode(device.zone, mode=MODE_MANUAL))
+    coord.optimistic_device(device.guid, speed=int(value), is_on=True)
     await coord.async_send(
         coord.client.set_breezer(device, speed=int(value), is_on=True)
     )
 
 
 async def _set_speed_min(coord: TionCoordinator, device: TionDevice, value: float) -> None:
+    coord.optimistic_device(device.guid, speed_min_set=int(value))
     await coord.async_send(coord.client.set_breezer(device, speed_min_set=int(value)))
 
 
 async def _set_speed_max(coord: TionCoordinator, device: TionDevice, value: float) -> None:
+    coord.optimistic_device(device.guid, speed_max_set=int(value))
     await coord.async_send(coord.client.set_breezer(device, speed_max_set=int(value)))
 
 

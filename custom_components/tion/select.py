@@ -57,9 +57,11 @@ class TionAirSourceSelect(TionEntity, SelectEntity):
         device = self._device
         gate = self._map[option]
         if device.zone.mode != MODE_MANUAL:
+            self.coordinator.optimistic_zone_mode(device.zone.guid, MODE_MANUAL)
             await self.coordinator.async_send(
                 self.coordinator.client.set_zone_mode(device.zone, mode=MODE_MANUAL)
             )
+        self.coordinator.optimistic_device(self._guid, gate=gate)
         await self.coordinator.async_send(
             self.coordinator.client.set_breezer(device, gate=gate)
         )
