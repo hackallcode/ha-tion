@@ -57,6 +57,7 @@
     },
     "number": {
       "fan_speed": { "name": "Fan speed" },
+      "target_temp": { "name": "Temperature" },
       "target_co2": { "name": "Target CO2" },
       "speed_min_set": { "name": "Minimum speed" },
       "speed_max_set": { "name": "Maximum speed" }

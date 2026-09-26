@@ -57,6 +57,7 @@
     },
     "number": {
       "fan_speed": { "name": "Скорость" },
+      "target_temp": { "name": "Температура" },
       "target_co2": { "name": "Целевой CO₂" },
       "speed_min_set": { "name": "Мин. скорость" },
       "speed_max_set": { "name": "Макс. скорость" }

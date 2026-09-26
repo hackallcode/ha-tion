@@ -10,7 +10,11 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import CONCENTRATION_PARTS_PER_MILLION, EntityCategory
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    EntityCategory,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -33,6 +37,11 @@ class TionNumberDescription(NumberEntityDescription):
 async def _set_target_co2(coord: TionCoordinator, device: TionDevice, value: float) -> None:
     coord.optimistic_zone_co2(device.zone.guid, int(value))
     await coord.async_send(coord.client.set_zone_mode(device.zone, target_co2=value))
+
+
+async def _set_target_temp(coord: TionCoordinator, device: TionDevice, value: float) -> None:
+    coord.optimistic_device(device.guid, t_set=int(value))
+    await coord.async_send(coord.client.set_breezer(device, t_set=int(value)))
 
 
 async def _set_fan_speed(coord: TionCoordinator, device: TionDevice, value: float) -> None:
@@ -73,6 +82,19 @@ MAGICAIR_NUMBERS: tuple[TionNumberDescription, ...] = (
 )
 
 BREEZER_NUMBERS: tuple[TionNumberDescription, ...] = (
+    TionNumberDescription(
+        key="target_temp",
+        translation_key="target_temp",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_min_value=0,
+        native_max_value=30,
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        icon="mdi:thermometer",
+        value_fn=lambda d: d.data.get("t_set"),
+        set_fn=_set_target_temp,
+    ),
     TionNumberDescription(
         key="fan_speed",
         translation_key="fan_speed",
