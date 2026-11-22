@@ -21,7 +21,6 @@ API_CLIENT_SECRET = "syRxSrT77P"
 TASK_MAX_WAIT = 10  # seconds to wait for a queued command to complete
 TASK_POLL_INTERVAL = 1
 
-# A failed password login blocks the next one for this long, doubling up to the max.
 LOGIN_BACKOFF_MIN = 300
 LOGIN_BACKOFF_MAX = 3600
 

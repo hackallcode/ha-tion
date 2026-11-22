@@ -72,7 +72,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TionConfigEntry) -> bool
             data={**entry.data, CONF_AUTH: authorization, CONF_REFRESH_TOKEN: refresh_token},
         )
 
-    # No login here: the stored token is reused and renewed only when the cloud rejects it.
     client = TionClient(
         async_get_clientsession(hass),
         entry.data[CONF_USERNAME],

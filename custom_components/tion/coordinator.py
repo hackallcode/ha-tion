@@ -69,7 +69,6 @@ class TionCoordinator(DataUpdateCoordinator[TionData]):
         try:
             devices, zones = await self.client.get_devices_and_zones()
         except TionAuthError as err:
-            # Stops polling and starts the reauth flow instead of retrying the login.
             raise ConfigEntryAuthFailed(str(err)) from err
         except TionConnectionError as err:
             raise UpdateFailed(f"Cannot reach Tion cloud: {err}") from err

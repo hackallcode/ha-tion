@@ -31,8 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 # Merge breezer changes arriving within this window into one /mode call.
 COALESCE_DELAY = 0.3
 
-# Module-level so it survives config entry reloads and setup retries:
-# username -> (blocked until, current backoff), both in monotonic seconds.
+# Module-level to survive entry reloads and setup retries.
 _LOGIN_BACKOFF: dict[str, tuple[float, float]] = {}
 
 
@@ -178,10 +177,8 @@ class TionClient:
         self.authorization = authorization
         self.refresh_token = refresh_token
         self._on_token = on_token
-        # Like the mobile app: one token renewal at a time, the rest wait and reuse it.
-        self._auth_lock = asyncio.Lock()
-        # Set once the cloud rejected the credentials: no more logins until reauth.
-        self._auth_failed = False
+        self._renew_lock = asyncio.Lock()
+        self._credentials_rejected = False
         # Every breezer /mode POST sends the FULL state, so near-simultaneous
         # commands must not clobber each other. We coalesce overrides that arrive
         # within a short window into ONE /mode call; a lock serializes writes.
@@ -224,10 +221,8 @@ class TionClient:
         _LOGGER.warning("Tion password login failed (%s), next attempt in %ss", reason, int(backoff))
 
     async def authenticate(self, *, user_initiated: bool = False) -> str:
-        """Log in with the password. Returns the authorization header value.
-        Background logins are paused after a failure; a login the user started
-        from the config flow is not."""
-        if self._auth_failed:
+        """Log in with the password. Returns the authorization header value."""
+        if self._credentials_rejected:
             raise TionAuthError("Tion credentials were rejected, reauthentication required")
         key = self._email.lower()
         blocked_until, _ = _LOGIN_BACKOFF.get(key, (0.0, 0.0))
@@ -250,7 +245,7 @@ class TionClient:
             raise
         if status in (400, 401):
             _LOGIN_BACKOFF.pop(key, None)
-            self._auth_failed = True
+            self._credentials_rejected = True
             raise TionAuthError("Invalid Tion credentials")
         if status != 200 or not js or not js.get("access_token"):
             self._pause_logins(f"HTTP {status}")
@@ -260,8 +255,7 @@ class TionClient:
         return self.authorization
 
     async def _refresh(self) -> bool:
-        """Renew the access token with the refresh token, as the mobile app does.
-        Returns False when there is no refresh token or it is no longer accepted."""
+        """Returns False when there is no refresh token or it is not accepted."""
         if not self.refresh_token:
             return False
         data = {
@@ -283,7 +277,7 @@ class TionClient:
 
     async def _renew_token(self, stale: str | None) -> None:
         """Replace a rejected token; concurrent callers share one renewal."""
-        async with self._auth_lock:
+        async with self._renew_lock:
             if self.authorization and self.authorization != stale:
                 return
             if not await self._refresh():
@@ -293,7 +287,7 @@ class TionClient:
         self, method: str, url: str, *, json: dict | None = None, _retry: bool = True
     ) -> Any:
         """Perform an authorized request, renewing the token once on 401."""
-        if self._auth_failed:
+        if self._credentials_rejected:
             raise TionAuthError("Tion credentials were rejected, reauthentication required")
         if not self.authorization:
             await self._renew_token(None)

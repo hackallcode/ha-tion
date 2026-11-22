@@ -83,7 +83,6 @@ class TionConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
-        """The cloud rejected the stored password."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
