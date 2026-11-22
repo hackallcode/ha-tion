@@ -7,16 +7,23 @@ DOMAIN = "tion"
 
 # Config
 CONF_AUTH = "auth"  # cached "token_type access_token" stored in the entry
+CONF_REFRESH_TOKEN = "refresh_token"
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 MIN_SCAN_INTERVAL = timedelta(seconds=10)
 
 # Tion MagicAir cloud API
 API_BASE = "https://api2.magicair.tion.ru"
 API_TOKEN_URL = f"{API_BASE}/idsrv/oauth2/token"
+API_REFRESH_URL = f"{API_BASE}/idsrv/connect/token"
 API_LOCATION_URL = f"{API_BASE}/location"
 API_CLIENT_ID = "cd594955-f5ba-4c20-9583-5990bb29f4ef"
 API_CLIENT_SECRET = "syRxSrT77P"
 TASK_MAX_WAIT = 10  # seconds to wait for a queued command to complete
+TASK_POLL_INTERVAL = 1
+
+# A failed password login blocks the next one for this long, doubling up to the max.
+LOGIN_BACKOFF_MIN = 300
+LOGIN_BACKOFF_MAX = 3600
 
 # Device type markers returned by the API in device["type"]
 BREEZER_TYPES = ("breezer", "o2")  # breezer3, breezer4, O2...

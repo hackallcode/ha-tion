@@ -8,6 +8,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -68,7 +69,8 @@ class TionCoordinator(DataUpdateCoordinator[TionData]):
         try:
             devices, zones = await self.client.get_devices_and_zones()
         except TionAuthError as err:
-            raise UpdateFailed(f"Authentication failed: {err}") from err
+            # Stops polling and starts the reauth flow instead of retrying the login.
+            raise ConfigEntryAuthFailed(str(err)) from err
         except TionConnectionError as err:
             raise UpdateFailed(f"Cannot reach Tion cloud: {err}") from err
         data = TionData(devices, zones)
