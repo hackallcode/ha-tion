@@ -8,7 +8,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -88,20 +88,7 @@ class TionConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        return await self._async_step_password(
-            "reauth_confirm", self._get_reauth_entry(), user_input
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        return await self._async_step_password(
-            "reconfigure", self._get_reconfigure_entry(), user_input
-        )
-
-    async def _async_step_password(
-        self, step_id: str, entry: ConfigEntry, user_input: dict[str, Any] | None
-    ) -> ConfigFlowResult:
+        entry = self._get_reauth_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
             tokens = await self._try_validate(
@@ -113,9 +100,36 @@ class TionConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={**entry.data, CONF_PASSWORD: user_input[CONF_PASSWORD], **tokens},
                 )
         return self.async_show_form(
-            step_id=step_id,
+            step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             description_placeholders={"username": entry.data[CONF_USERNAME]},
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
+            self._abort_if_unique_id_mismatch()
+            data = {**entry.data, **user_input}
+            credentials_changed = any(
+                user_input[key] != entry.data[key] for key in (CONF_USERNAME, CONF_PASSWORD)
+            )
+            if credentials_changed:
+                tokens = await self._try_validate(
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD], errors
+                )
+                data.update(tokens or {})
+            if not errors:
+                return self.async_update_reload_and_abort(entry, data=data)
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                USER_SCHEMA, user_input or entry.data
+            ),
             errors=errors,
         )
 

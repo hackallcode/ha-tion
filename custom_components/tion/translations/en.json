@@ -19,9 +19,11 @@
       },
       "reconfigure": {
         "title": "Tion MagicAir",
-        "description": "Enter the current password for {username}.",
+        "description": "Change the connection settings. A new email or password is checked by signing in.",
         "data": {
-          "password": "Password"
+          "username": "Email",
+          "password": "Password",
+          "scan_interval": "Polling interval (seconds)"
         }
       }
     },
@@ -34,7 +36,8 @@
       "already_configured": "This account is already configured",
       "cannot_connect": "Cannot reach the Tion cloud",
       "reauth_successful": "Signed in again",
-      "reconfigure_successful": "Password updated"
+      "reconfigure_successful": "Settings updated",
+      "unique_id_mismatch": "This is a different Tion account. Add it as a new integration."
     }
   },
   "entity": {
