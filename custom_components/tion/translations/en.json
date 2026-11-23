@@ -9,6 +9,22 @@
           "password": "Password",
           "scan_interval": "Polling interval (seconds)"
         }
+      },
+      "reauth_confirm": {
+        "title": "Tion MagicAir",
+        "description": "The Tion cloud rejected the password for {username}. Enter the current one.",
+        "data": {
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "title": "Tion MagicAir",
+        "description": "Change the connection settings. A new email or password is checked by signing in.",
+        "data": {
+          "username": "Email",
+          "password": "Password",
+          "scan_interval": "Polling interval (seconds)"
+        }
       }
     },
     "error": {
@@ -18,7 +34,10 @@
     },
     "abort": {
       "already_configured": "This account is already configured",
-      "cannot_connect": "Cannot reach the Tion cloud"
+      "cannot_connect": "Cannot reach the Tion cloud",
+      "reauth_successful": "Signed in again",
+      "reconfigure_successful": "Settings updated",
+      "unique_id_mismatch": "This is a different Tion account. Add it as a new integration."
     }
   },
   "entity": {

@@ -9,6 +9,22 @@
           "password": "Пароль",
           "scan_interval": "Интервал опроса (секунды)"
         }
+      },
+      "reauth_confirm": {
+        "title": "Tion MagicAir",
+        "description": "Облако Tion не приняло пароль для {username}. Введите актуальный.",
+        "data": {
+          "password": "Пароль"
+        }
+      },
+      "reconfigure": {
+        "title": "Tion MagicAir",
+        "description": "Измените параметры подключения. Новые почта или пароль проверяются входом в облако.",
+        "data": {
+          "username": "Эл. почта",
+          "password": "Пароль",
+          "scan_interval": "Интервал опроса (секунды)"
+        }
       }
     },
     "error": {
@@ -18,7 +34,10 @@
     },
     "abort": {
       "already_configured": "Этот аккаунт уже настроен",
-      "cannot_connect": "Нет связи с облаком Tion"
+      "cannot_connect": "Нет связи с облаком Tion",
+      "reauth_successful": "Вход выполнен заново",
+      "reconfigure_successful": "Настройки обновлены",
+      "unique_id_mismatch": "Это другой аккаунт Tion. Добавьте его как новую интеграцию."
     }
   },
   "entity": {

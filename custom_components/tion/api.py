@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Callable
+from time import monotonic
 from typing import Any
 
 from aiohttp import ClientError, ClientSession
@@ -11,19 +13,26 @@ from .const import (
     API_CLIENT_ID,
     API_CLIENT_SECRET,
     API_LOCATION_URL,
+    API_REFRESH_URL,
     API_TOKEN_URL,
     API_BASE,
     BREEZER_TYPES,
+    LOGIN_BACKOFF_MAX,
+    LOGIN_BACKOFF_MIN,
     MAGICAIR_TYPES,
     MODE_AUTO,
     MODE_MANUAL,
     TASK_MAX_WAIT,
+    TASK_POLL_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 # Merge breezer changes arriving within this window into one /mode call.
 COALESCE_DELAY = 0.3
+
+# Module-level to survive entry reloads and setup retries.
+_LOGIN_BACKOFF: dict[str, tuple[float, float]] = {}
 
 
 class TionError(Exception):
@@ -159,11 +168,17 @@ class TionClient:
         email: str,
         password: str,
         authorization: str | None = None,
+        refresh_token: str | None = None,
+        on_token: Callable[[str, str | None], None] | None = None,
     ) -> None:
         self._session = session
         self._email = email
         self._password = password
         self.authorization = authorization
+        self.refresh_token = refresh_token
+        self._on_token = on_token
+        self._renew_lock = asyncio.Lock()
+        self._credentials_rejected = False
         # Every breezer /mode POST sends the FULL state, so near-simultaneous
         # commands must not clobber each other. We coalesce overrides that arrive
         # within a short window into ONE /mode call; a lock serializes writes.
@@ -181,8 +196,40 @@ class TionClient:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0) HomeAssistant Tion",
         }
 
-    async def authenticate(self) -> str:
-        """Get a fresh OAuth token. Returns the authorization header value."""
+    async def _token_request(self, url: str, data: dict[str, str]) -> tuple[int, Any]:
+        try:
+            async with self._session.post(url, data=data, timeout=15) as resp:
+                if resp.status != 200:
+                    return resp.status, None
+                return 200, await resp.json(content_type=None)
+        except ClientError as err:
+            raise TionConnectionError(f"Token request error: {err}") from err
+        except asyncio.TimeoutError as err:
+            raise TionConnectionError("Token request timed out") from err
+
+    def _store_token(self, js: dict[str, Any]) -> None:
+        self.authorization = f"{js['token_type']} {js['access_token']}"
+        self.refresh_token = js.get("refresh_token") or self.refresh_token
+        if self._on_token is not None:
+            self._on_token(self.authorization, self.refresh_token)
+
+    def _pause_logins(self, reason: str) -> None:
+        key = self._email.lower()
+        _, backoff = _LOGIN_BACKOFF.get(key, (0.0, 0.0))
+        backoff = min(max(backoff * 2, LOGIN_BACKOFF_MIN), LOGIN_BACKOFF_MAX)
+        _LOGIN_BACKOFF[key] = (monotonic() + backoff, backoff)
+        _LOGGER.warning("Tion password login failed (%s), next attempt in %ss", reason, int(backoff))
+
+    async def authenticate(self, *, user_initiated: bool = False) -> str:
+        """Log in with the password. Returns the authorization header value."""
+        if self._credentials_rejected:
+            raise TionAuthError("Tion credentials were rejected, reauthentication required")
+        key = self._email.lower()
+        blocked_until, _ = _LOGIN_BACKOFF.get(key, (0.0, 0.0))
+        if not user_initiated and monotonic() < blocked_until:
+            raise TionConnectionError(
+                f"Password login paused for {int(blocked_until - monotonic())}s after a failure"
+            )
         data = {
             "username": self._email,
             "password": self._password,
@@ -190,26 +237,61 @@ class TionClient:
             "client_secret": API_CLIENT_SECRET,
             "grant_type": "password",
         }
+        _LOGGER.info("Logging in to the Tion cloud with the password")
         try:
-            async with self._session.post(API_TOKEN_URL, data=data, timeout=15) as resp:
-                if resp.status == 200:
-                    js = await resp.json()
-                    self.authorization = f"{js['token_type']} {js['access_token']}"
-                    return self.authorization
-                if resp.status in (400, 401):
-                    raise TionAuthError("Invalid Tion credentials")
-                raise TionConnectionError(f"Token request failed: HTTP {resp.status}")
-        except ClientError as err:
-            raise TionConnectionError(f"Token request error: {err}") from err
-        except asyncio.TimeoutError as err:
-            raise TionConnectionError("Token request timed out") from err
+            status, js = await self._token_request(API_TOKEN_URL, data)
+        except TionConnectionError as err:
+            self._pause_logins(str(err))
+            raise
+        if status in (400, 401):
+            _LOGIN_BACKOFF.pop(key, None)
+            self._credentials_rejected = True
+            raise TionAuthError("Invalid Tion credentials")
+        if status != 200 or not js or not js.get("access_token"):
+            self._pause_logins(f"HTTP {status}")
+            raise TionConnectionError(f"Token request failed: HTTP {status}")
+        _LOGIN_BACKOFF.pop(key, None)
+        self._store_token(js)
+        return self.authorization
+
+    async def _refresh(self) -> bool:
+        """Returns False when there is no refresh token or it is not accepted."""
+        if not self.refresh_token:
+            return False
+        data = {
+            "grant_type": "refresh_token",
+            "refresh_token": self.refresh_token,
+            "client_id": API_CLIENT_ID,
+            "client_secret": API_CLIENT_SECRET,
+        }
+        status, js = await self._token_request(API_REFRESH_URL, data)
+        if status == 200 and js and js.get("access_token"):
+            _LOGGER.debug("Tion access token refreshed")
+            self._store_token(js)
+            return True
+        if status in (400, 401, 403, 404):
+            _LOGGER.info("Tion refresh token not accepted (HTTP %s)", status)
+            self.refresh_token = None
+            return False
+        raise TionConnectionError(f"Token refresh failed: HTTP {status}")
+
+    async def _renew_token(self, stale: str | None) -> None:
+        """Replace a rejected token; concurrent callers share one renewal."""
+        async with self._renew_lock:
+            if self.authorization and self.authorization != stale:
+                return
+            if not await self._refresh():
+                await self.authenticate()
 
     async def _request(
         self, method: str, url: str, *, json: dict | None = None, _retry: bool = True
     ) -> Any:
-        """Perform an authorized request, re-authenticating once on 401."""
+        """Perform an authorized request, renewing the token once on 401."""
+        if self._credentials_rejected:
+            raise TionAuthError("Tion credentials were rejected, reauthentication required")
         if not self.authorization:
-            await self.authenticate()
+            await self._renew_token(None)
+        sent_with = self.authorization
         if method != "GET":
             _LOGGER.debug("Tion -> %s %s json=%s", method, url, json)
         try:
@@ -217,7 +299,7 @@ class TionClient:
                 method, url, json=json, headers=self._headers, timeout=15
             ) as resp:
                 if resp.status == 401 and _retry:
-                    await self.authenticate()
+                    await self._renew_token(sent_with)
                     return await self._request(method, url, json=json, _retry=False)
                 if resp.status not in (200, 201, 204):
                     raise TionConnectionError(f"{method} {url} -> HTTP {resp.status}")
@@ -258,12 +340,11 @@ class TionClient:
         if not task_id:
             return False
         url = f"{API_BASE}/task/{task_id}"
-        delay = 0.5
-        for _ in range(int(TASK_MAX_WAIT / delay)):
+        for _ in range(int(TASK_MAX_WAIT / TASK_POLL_INTERVAL)):
             result = await self._request("GET", url)
             if result.get("status") == "completed":
                 return True
-            await asyncio.sleep(delay)
+            await asyncio.sleep(TASK_POLL_INTERVAL)
         _LOGGER.warning("Tion task %s did not complete in %ss", task_id, TASK_MAX_WAIT)
         return False
 

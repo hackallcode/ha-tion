@@ -18,8 +18,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .api import TionAuthError, TionClient, TionConnectionError
-from .const import CONF_AUTH, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .api import TionClient
+from .const import CONF_AUTH, CONF_REFRESH_TOKEN, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import TionCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,29 +66,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: TionConfigEntry) -> bool:
     """Set up Tion from a config entry."""
-    session = async_get_clientsession(hass)
+    def save_token(authorization: str, refresh_token: str | None) -> None:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_AUTH: authorization, CONF_REFRESH_TOKEN: refresh_token},
+        )
+
     client = TionClient(
-        session,
+        async_get_clientsession(hass),
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
         authorization=entry.data.get(CONF_AUTH),
+        refresh_token=entry.data.get(CONF_REFRESH_TOKEN),
+        on_token=save_token,
     )
-    try:
-        await client.authenticate()
-    except TionAuthError as err:
-        from homeassistant.exceptions import ConfigEntryAuthFailed
-
-        raise ConfigEntryAuthFailed(str(err)) from err
-    except TionConnectionError as err:
-        from homeassistant.exceptions import ConfigEntryNotReady
-
-        raise ConfigEntryNotReady(str(err)) from err
-
-    # Persist the fresh token so a restart doesn't re-authenticate needlessly.
-    if client.authorization != entry.data.get(CONF_AUTH):
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_AUTH: client.authorization}
-        )
 
     scan = entry.data.get(CONF_SCAN_INTERVAL)
     scan_interval = timedelta(seconds=scan) if scan else DEFAULT_SCAN_INTERVAL
